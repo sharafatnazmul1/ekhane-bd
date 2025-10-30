@@ -1,0 +1,42 @@
+{
+  "en": {
+    "hero_title": "Build Your Online Store — Right Here!",
+    "hero_sub": "Create your store in 2 minutes — no coding required.",
+    "start_btn": "Start for Free",
+    "easy_setup": "Easy Setup",
+    "easy_sub": "Start selling in minutes — no developer needed",
+    "bangla_interface": "Bangla Interface",
+    "bangla_sub": "Fully usable in Bangla",
+    "secure_fast": "Secure & Fast",
+    "secure_sub": "Your store data stays safe on our servers",
+    "how_works": "How It Works",
+    "step1": "Sign Up",
+    "step1_sub": "Create your free account",
+    "step2": "Name Your Shop",
+    "step2_sub": "Pick your shop subdomain",
+    "step3": "Start Selling",
+    "step3_sub": "Upload products and start selling",
+    "footer": "Your store starts here",
+    "title_main": "Build Your Online Store — Right Here!"
+  },
+  "bn": {
+    "hero_title": "নিজের অনলাইন দোকান খুলুন — এখানেই!",
+    "hero_sub": "মাত্র ২ মিনিটে তৈরি করুন আপনার দোকান, কোনো কোডিং ছাড়াই।",
+    "start_btn": "এখনই দোকান খুলুন",
+    "easy_setup": "সহজ সেটআপ",
+    "easy_sub": "২ মিনিটেই শুরু করুন, কোনো ডেভেলপার ছাড়াই",
+    "bangla_interface": "বাংলা ইন্টারফেস",
+    "bangla_sub": "পুরো সিস্টেম বাংলায় ব্যবহারযোগ্য",
+    "secure_fast": "নিরাপদ ও দ্রুত",
+    "secure_sub": "আপনার দোকানের ডেটা আমাদের সার্ভারে নিরাপদ",
+    "how_works": "কাজের ধাপ",
+    "step1": "সাইন আপ",
+    "step1_sub": "একটি অ্যাকাউন্ট তৈরি করুন",
+    "step2": "দোকানের নাম দিন",
+    "step2_sub": "আপনার দোকানের সাবডোমেইন নির্বাচন করুন",
+    "step3": "বিক্রি শুরু করুন",
+    "step3_sub": "পণ্য আপলোড করে বিক্রি শুরু করুন",
+    "footer": "আপনার অনলাইন দোকান এখানেই",
+    "title_main": "নিজের অনলাইন দোকান খুলুন — এখানেই!"
+  }
+}
