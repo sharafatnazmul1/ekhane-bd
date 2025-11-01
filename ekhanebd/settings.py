@@ -29,8 +29,32 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+AUTH_USER_MODEL = "dokans.User"
 # Application definition
+
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'mail.otiwo@gmail.com'
+EMAIL_HOST_PASSWORD = 'gmttfwctkdogzgiw'
+DEFAULT_FROM_EMAIL = 'mail.otiwo@gmail.com'
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": "myshop"
+    }
+}
+
+
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,6 +64,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main',
+    'dokans',
+    'accounts',
 ]
 
 MIDDLEWARE = [

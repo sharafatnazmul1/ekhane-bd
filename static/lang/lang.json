@@ -17,7 +17,15 @@
     "step3": "Start Selling",
     "step3_sub": "Upload products and start selling",
     "footer": "Your store starts here",
-    "title_main": "Build Your Online Store — Right Here!"
+    "title_main": "Build Your Online Store — Right Here!",
+    "reg_hero": "Create Your Store",
+    "reg_name": "Name",
+    "reg_email": "Email",
+    "reg_password": "Password",
+    "reg_store_name": "Store Name",
+    "reg_shop_url": "Choose Your Shop Url",
+    "reg_phone_number": "Phone Number",
+    "reg_submit": "Create Shop"
   },
   "bn": {
     "hero_title": "নিজের অনলাইন দোকান খুলুন — এখানেই!",
@@ -37,6 +45,14 @@
     "step3": "বিক্রি শুরু করুন",
     "step3_sub": "পণ্য আপলোড করে বিক্রি শুরু করুন",
     "footer": "আপনার অনলাইন দোকান এখানেই",
-    "title_main": "নিজের অনলাইন দোকান খুলুন — এখানেই!"
+    "title_main": "নিজের অনলাইন দোকান খুলুন — এখানেই!",
+    "reg_hero": "আপনার দোকান খুলুন",
+    "_name": "নাম",
+    "_email": "ই-মেইল",
+    "_password": "পাসওয়ার্ড",
+    "_store_name": "দোকানের নাম",
+    "_shop_url": "দোকানের লিংক নির্বাচন করুন",
+    "_phone_number": "মোবাইল নম্বর",
+    "reg_submit": "দোকান রেজিস্টার করুন"
   }
 }

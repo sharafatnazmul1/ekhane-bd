@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', public_views.home, name='home'),
     path('registration/', public_views.signup, name="signup"),
+    path("validate/", public_views.validate_field, name="validate-field"),
 ]

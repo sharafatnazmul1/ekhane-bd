@@ -12,11 +12,11 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.usernamme
+        return self.username
     
 
 class Store(models.Model):
-    owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='Store')
+    owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='store')
     store_name = models.CharField(max_length=150)
     subdomain = models.CharField(max_length=50, unique=True)
     STATUS_CHOICES = (
@@ -27,9 +27,11 @@ class Store(models.Model):
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default='draft')
     created_at = models.DateTimeField(auto_now_add=True)
     trial_days = 7
-    trial_end = models.DateField(default=timezone.now() + timedelta(days=trial_days))
-
-
+    def get_trial_end():
+        return timezone.now().date() + timedelta(days=7)
+    
+    trial_end = models.DateField(default=get_trial_end)
+    
     def is_trial_active(self):
         return timezone.now().date() <= self.trial_end
     
