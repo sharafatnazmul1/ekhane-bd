@@ -4,6 +4,9 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings
 from dokans.models import Store
 from .utils.email_service import is_real_email, send_otp_email
 from .utils.domain_validator import is_valid_subdomain
@@ -457,6 +460,99 @@ def get_cart_count(request, store):
         return 0
 
 
+def send_order_confirmation_email(order, store):
+    """Send order confirmation email to customer"""
+    try:
+        from datetime import datetime
+
+        # Get domain from settings or use default
+        domain = getattr(settings, 'MAIN_DOMAIN', 'ekhane.bd')
+
+        # Context for email template
+        context = {
+            'order': order,
+            'store': store,
+            'subdomain': store.subdomain,
+            'domain': domain,
+            'current_year': datetime.now().year,
+        }
+
+        # Render email templates
+        html_content = render_to_string('emails/order_confirmation.html', context)
+        text_content = render_to_string('emails/order_confirmation.txt', context)
+
+        # Create email
+        subject = f'Order Confirmation - {order.order_number}'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@ekhane.bd')
+        to_email = order.shipping_email
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=from_email,
+            to=[to_email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send(fail_silently=True)
+
+        return True
+    except Exception as e:
+        # Log error but don't fail the order process
+        print(f"Error sending order confirmation email: {e}")
+        return False
+
+
+def send_order_status_update_email(order, store, new_status):
+    """Send order status update email to customer"""
+    try:
+        from datetime import datetime
+
+        # Get domain from settings or use default
+        domain = getattr(settings, 'MAIN_DOMAIN', 'ekhane.bd')
+
+        # Context for email template
+        context = {
+            'order': order,
+            'store': store,
+            'new_status': new_status,
+            'subdomain': store.subdomain,
+            'domain': domain,
+            'current_year': datetime.now().year,
+        }
+
+        # Render email templates
+        html_content = render_to_string('emails/order_status_update.html', context)
+        text_content = render_to_string('emails/order_status_update.txt', context)
+
+        # Create email subject based on status
+        status_text = {
+            'confirmed': 'Order Confirmed',
+            'processing': 'Order Processing',
+            'shipped': 'Order Shipped',
+            'delivered': 'Order Delivered',
+            'cancelled': 'Order Cancelled',
+        }.get(new_status, 'Order Status Updated')
+
+        subject = f'{status_text} - {order.order_number}'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@ekhane.bd')
+        to_email = order.shipping_email
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=from_email,
+            to=[to_email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send(fail_silently=True)
+
+        return True
+    except Exception as e:
+        # Log error but don't fail the status update
+        print(f"Error sending order status update email: {e}")
+        return False
+
+
 # ============================================================================
 # CART VIEWS
 # ============================================================================
@@ -685,12 +781,20 @@ def process_checkout(request, store, cart):
         # COD - order is confirmed, payment pending
         order.status = 'confirmed'
         order.save()
+
+        # Send order confirmation email
+        send_order_confirmation_email(order, store)
+
         return redirect('order_confirmation', order_number=order.order_number)
     elif payment_method == 'bkash':
         # Redirect to bKash payment (will implement later)
         messages.info(request, 'bKash payment coming soon. Using COD for now.')
         order.status = 'confirmed'
         order.save()
+
+        # Send order confirmation email
+        send_order_confirmation_email(order, store)
+
         return redirect('order_confirmation', order_number=order.order_number)
 
     return redirect('order_confirmation', order_number=order.order_number)
@@ -713,5 +817,121 @@ def order_confirmation(request, order_number):
         'cart_count': 0,  # Cart is empty after checkout
     }
     return render(request, 'shop/order_confirmation.html', context)
+
+
+# ============================================================================
+# ORDER MANAGEMENT VIEWS (Store Owner Dashboard)
+# ============================================================================
+
+@login_required
+def order_list(request):
+    """Order listing for store owners"""
+    store = request.user.store
+    from orders.models import Order
+
+    # Get filters
+    status = request.GET.get('status', '')
+    search = request.GET.get('search', '')
+
+    # Base queryset
+    orders = Order.objects.filter(store=store).select_related('customer').prefetch_related('items')
+
+    # Apply filters
+    if status:
+        orders = orders.filter(status=status)
+
+    if search:
+        from django.db.models import Q
+        orders = orders.filter(
+            Q(order_number__icontains=search) |
+            Q(customer__name__icontains=search) |
+            Q(customer__email__icontains=search) |
+            Q(shipping_phone__icontains=search)
+        )
+
+    # Statistics
+    from django.db.models import Sum, Count
+    total_orders = Order.objects.filter(store=store).count()
+    pending_orders = Order.objects.filter(store=store, status='pending').count()
+    total_revenue = Order.objects.filter(store=store, payment_status='paid').aggregate(Sum('total'))['total__sum'] or 0
+
+    context = {
+        'store': store,
+        'orders': orders,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'total_revenue': total_revenue,
+        'selected_status': status,
+        'search': search,
+    }
+    return render(request, 'dashboard/orders/list.html', context)
+
+
+@login_required
+def order_detail(request, order_id):
+    """Order detail view for store owners"""
+    store = request.user.store
+    from orders.models import Order
+    from django.shortcuts import get_object_or_404
+
+    order = get_object_or_404(Order, id=order_id, store=store)
+
+    if request.method == 'POST':
+        # Update order status
+        new_status = request.POST.get('status')
+        if new_status in dict(Order.STATUS_CHOICES):
+            old_status = order.status
+            order.status = new_status
+            order.save()
+
+            # Send email notification if status changed
+            if old_status != new_status:
+                send_order_status_update_email(order, store, new_status)
+
+            messages.success(request, f'Order status updated to {order.get_status_display()}')
+            return redirect('order_detail', order_id=order.id)
+
+    context = {
+        'store': store,
+        'order': order,
+    }
+    return render(request, 'dashboard/orders/detail.html', context)
+
+
+@login_required
+def customer_list(request):
+    """Customer listing for store owners"""
+    store = request.user.store
+    from orders.models import Customer
+
+    customers = Customer.objects.filter(store=store).order_by('-created_at')
+
+    context = {
+        'store': store,
+        'customers': customers,
+    }
+    return render(request, 'dashboard/customers/list.html', context)
+
+
+@login_required
+def store_settings(request):
+    """Store settings page"""
+    store = request.user.store
+    from dokans.forms import StoreSettingsForm
+
+    if request.method == 'POST':
+        form = StoreSettingsForm(request.POST, instance=store)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Store settings updated successfully!')
+            return redirect('store_settings')
+    else:
+        form = StoreSettingsForm(instance=store)
+
+    context = {
+        'store': store,
+        'form': form,
+    }
+    return render(request, 'dashboard/settings.html', context)
 
 

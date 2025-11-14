@@ -1,0 +1,186 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}{{ product.name }} - {{ store.store_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'shop_home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'shop_products' %}">Products</a></li>
+            {% if product.category %}
+            <li class="breadcrumb-item"><a href="{% url 'shop_products' %}?category={{ product.category.slug }}">{{ product.category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    {% if product.get_primary_image %}
+                    <img src="{{ product.get_primary_image.image.url }}" alt="{{ product.name }}" class="w-100" style="max-height: 500px; object-fit: contain;">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 500px;">
+                        <i class="bi bi-image text-muted" style="font-size: 100px;"></i>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Additional Images -->
+            {% if product.images.count > 1 %}
+            <div class="row g-2 mt-2">
+                {% for image in product.images.all %}
+                <div class="col-3">
+                    <img src="{{ image.image.url }}" alt="{{ product.name }}" class="img-thumbnail" style="cursor: pointer; height: 100px; object-fit: cover;">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <div class="mb-3">
+                {% if product.category %}
+                <span class="badge bg-primary mb-2">{{ product.category.name }}</span>
+                {% endif %}
+
+                <h1 class="mb-3">{{ product.name }}</h1>
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="h2 mb-0 text-primary">৳{{ product.final_price }}</div>
+                    {% if product.sale_price %}
+                    <div class="h4 mb-0 text-muted text-decoration-line-through">৳{{ product.price }}</div>
+                    <span class="badge bg-danger">Save {{ product.discount_percentage }}%</span>
+                    {% endif %}
+                </div>
+
+                {% if product.short_description %}
+                <p class="lead">{{ product.short_description }}</p>
+                {% endif %}
+
+                <!-- Stock Status -->
+                <div class="mb-4">
+                    {% if product.is_in_stock %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> In Stock</span>
+                    {% if product.track_inventory %}
+                    <span class="text-muted small">{{ product.stock_quantity }} available</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Out of Stock</span>
+                    {% endif %}
+                </div>
+
+                <!-- Add to Cart -->
+                {% if product.is_in_stock %}
+                <div class="d-grid gap-2">
+                    <button onclick="addToCart({{ product.id }})" class="btn btn-primary btn-lg">
+                        <i class="bi bi-cart-plus"></i> Add to Cart
+                    </button>
+                    <a href="{% url 'cart_view' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-cart"></i> View Cart
+                    </a>
+                </div>
+                {% else %}
+                <button class="btn btn-secondary btn-lg w-100" disabled>
+                    Out of Stock
+                </button>
+                {% endif %}
+
+                <!-- Product Details -->
+                <div class="mt-4 border-top pt-4">
+                    <h5>Product Details</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><strong>SKU:</strong> {{ product.sku }}</li>
+                        {% if product.weight %}
+                        <li class="mb-2"><strong>Weight:</strong> {{ product.weight }} kg</li>
+                        {% endif %}
+                        {% if product.dimensions %}
+                        <li class="mb-2"><strong>Dimensions:</strong> {{ product.dimensions }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Description -->
+    {% if product.description %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Description</h4>
+                    <div class="product-description">
+                        {{ product.description|linebreaks }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Related Products (from same category) -->
+    {% if product.category %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-4">More from {{ product.category.name }}</h4>
+            <div class="row g-4">
+                {% for related in product.category.products.all|slice:":4" %}
+                {% if related.id != product.id and related.is_active %}
+                <div class="col-md-3 col-sm-6">
+                    <div class="product-card">
+                        <div class="position-relative">
+                            {% if related.get_primary_image %}
+                            <a href="{% url 'shop_product_detail' related.slug %}">
+                                <img src="{{ related.get_primary_image.image.url }}" alt="{{ related.name }}" class="product-image">
+                            </a>
+                            {% else %}
+                            <a href="{% url 'shop_product_detail' related.slug %}">
+                                <div class="product-image d-flex align-items-center justify-content-center bg-light">
+                                    <i class="bi bi-image text-muted" style="font-size: 48px;"></i>
+                                </div>
+                            </a>
+                            {% endif %}
+
+                            {% if related.discount_percentage > 0 %}
+                            <span class="badge-sale">-{{ related.discount_percentage }}%</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="product-info">
+                            <a href="{% url 'shop_product_detail' related.slug %}" class="product-name">
+                                {{ related.name }}
+                            </a>
+                            <div class="product-price mt-2">
+                                ৳{{ related.final_price }}
+                                {% if related.sale_price %}
+                                <span class="product-price-old">৳{{ related.price }}</span>
+                                {% endif %}
+                            </div>
+                            {% if related.is_in_stock %}
+                            <button onclick="addToCart({{ related.id }})" class="btn btn-primary w-100 mt-3">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .product-description {
+        line-height: 1.8;
+    }
+</style>
+{% endblock %}

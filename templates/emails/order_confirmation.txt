@@ -1,0 +1,58 @@
+ORDER CONFIRMED - {{ store.store_name }}
+================================================================================
+
+Thank you for your order!
+
+Your order has been placed successfully. We'll send you shipping updates as
+soon as your order is on its way.
+
+ORDER DETAILS
+-------------
+Order Number: {{ order.order_number }}
+Order Date: {{ order.created_at|date:"F d, Y" }}
+Store: {{ store.store_name }}
+
+ORDER ITEMS
+-----------
+{% for item in order.items.all %}
+{{ item.product_name }}
+SKU: {{ item.product_sku }}
+Quantity: {{ item.quantity }}
+Total: ৳{{ item.total }}
+
+{% endfor %}
+
+SUMMARY
+-------
+Subtotal: ৳{{ order.subtotal }}
+Shipping: {% if order.shipping_cost > 0 %}৳{{ order.shipping_cost }}{% else %}FREE{% endif %}
+Total: ৳{{ order.total }}
+
+SHIPPING ADDRESS
+----------------
+{{ order.shipping_name }}
+{{ order.shipping_address }}
+{% if order.shipping_area %}{{ order.shipping_area }}, {% endif %}{{ order.shipping_district }}
+{{ order.shipping_division }}
+
+Email: {{ order.shipping_email }}
+Phone: {{ order.shipping_phone }}
+
+PAYMENT INFORMATION
+-------------------
+Payment Method: {% if order.payment_method == 'cod' %}Cash on Delivery{% elif order.payment_method == 'bkash' %}bKash{% endif %}
+Payment Status: {{ order.payment_status|title }}
+
+WHAT HAPPENS NEXT?
+------------------
+- Your order will be processed within 1-2 business days
+{% if order.payment_method == 'cod' %}- Please keep the exact amount ready for payment on delivery
+{% endif %}- You'll receive updates about your order status
+- Track your order using the order number above
+
+View your order online:
+http://{{ subdomain }}.{{ domain }}/order/{{ order.order_number }}/
+
+Need help? Contact us at {{ store.owner.username }}
+
+© {{ current_year }} {{ store.store_name }}. All rights reserved.

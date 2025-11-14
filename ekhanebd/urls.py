@@ -34,6 +34,10 @@ urlpatterns = [
     # Dashboard URLs
     path('dashboard/', public_views.dashboard, name='dashboard'),
     path('dashboard/products/', include('products.urls')),
+    path('dashboard/orders/', public_views.order_list, name='order_list'),
+    path('dashboard/orders/<int:order_id>/', public_views.order_detail, name='order_detail'),
+    path('dashboard/customers/', public_views.customer_list, name='customer_list'),
+    path('dashboard/settings/', public_views.store_settings, name='store_settings'),
 
     # Storefront URLs (work on subdomains via middleware)
     path('shop/', public_views.shop_home, name='shop_home'),

@@ -1,0 +1,44 @@
+ORDER STATUS UPDATE - {{ store.store_name }}
+================================================================================
+
+{% if new_status == 'confirmed' %}Your order has been confirmed!
+{% elif new_status == 'processing' %}Your order is being processed
+{% elif new_status == 'shipped' %}Your order has been shipped!
+{% elif new_status == 'delivered' %}Your order has been delivered!
+{% elif new_status == 'cancelled' %}Your order has been cancelled
+{% else %}Order Status Updated
+{% endif %}
+
+Order #{{ order.order_number }}
+
+STATUS: {% if new_status == 'pending' %}PENDING
+{% elif new_status == 'confirmed' %}CONFIRMED
+{% elif new_status == 'processing' %}PROCESSING
+{% elif new_status == 'shipped' %}SHIPPED
+{% elif new_status == 'delivered' %}DELIVERED
+{% elif new_status == 'cancelled' %}CANCELLED
+{% endif %}
+
+ORDER SUMMARY
+-------------
+Order Date: {{ order.created_at|date:"F d, Y" }}
+Total Amount: ৳{{ order.total }}
+Items: {{ order.items.count }}
+
+{% if new_status == 'confirmed' %}Great news! Your order has been confirmed and will be processed soon.
+We'll notify you once it's ready to ship.
+{% elif new_status == 'processing' %}Your order is currently being prepared for shipment.
+We'll update you once it's on its way!
+{% elif new_status == 'shipped' %}Your order is on its way! It should arrive within the estimated delivery time.
+{% if order.payment_method == 'cod' %}Please keep the exact amount ready for payment on delivery.{% endif %}
+{% elif new_status == 'delivered' %}Your order has been delivered successfully! We hope you enjoy your purchase.
+Thank you for shopping with us!
+{% elif new_status == 'cancelled' %}Your order has been cancelled. If you have any questions, please contact us.
+{% endif %}
+
+View your order online:
+http://{{ subdomain }}.{{ domain }}/order/{{ order.order_number }}/
+
+Questions? Contact us at {{ store.owner.username }}
+
+© {{ current_year }} {{ store.store_name }}. All rights reserved.

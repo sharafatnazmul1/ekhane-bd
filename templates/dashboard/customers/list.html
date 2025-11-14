@@ -1,0 +1,135 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Customers - {{ store.store_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Customers</h2>
+</div>
+
+<!-- Search -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <label class="form-label">Search Customers</label>
+                <input type="text" name="search" class="form-control" placeholder="Search by name, email, or phone..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th class="text-center">Total Orders</th>
+                        <th class="text-end">Total Spent</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: 600;">
+                                    {{ customer.name.0|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ customer.name }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="mb-1">
+                                <i class="bi bi-envelope text-muted"></i>
+                                <a href="mailto:{{ customer.email }}">{{ customer.email }}</a>
+                            </div>
+                            <div>
+                                <i class="bi bi-telephone text-muted"></i>
+                                <a href="tel:{{ customer.phone }}">{{ customer.phone }}</a>
+                            </div>
+                        </td>
+                        <td class="text-center align-middle">
+                            <span class="badge bg-primary">{{ customer.orders.count }}</span>
+                        </td>
+                        <td class="text-end align-middle">
+                            <strong>৳{{ customer.total_spent|default:"0.00" }}</strong>
+                        </td>
+                        <td>
+                            <div>{{ customer.created_at|date:"M d, Y" }}</div>
+                            <small class="text-muted">{{ customer.created_at|date:"h:i A" }}</small>
+                        </td>
+                        <td>
+                            <a href="{% url 'order_list' %}?search={{ customer.email }}" class="btn btn-sm btn-outline-primary" title="View Orders">
+                                <i class="bi bi-basket"></i> Orders
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="mt-3">
+            <p class="text-muted mb-0">
+                <i class="bi bi-info-circle"></i>
+                Showing {{ customers.count }} customer{{ customers.count|pluralize }}
+            </p>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <div class="mb-3" style="font-size: 64px; opacity: 0.3;">
+                <i class="bi bi-people"></i>
+            </div>
+            <h5 class="text-muted mb-3">No Customers Found</h5>
+            {% if request.GET.search %}
+            <p class="text-muted mb-3">No customers match your search</p>
+            <a href="{% url 'customer_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-x-circle"></i> Clear Search
+            </a>
+            {% else %}
+            <p class="text-muted">Customers will appear here once they place orders</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Customer Stats Card -->
+{% if customers %}
+<div class="row g-3 mt-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Total Customers</h6>
+                <h3 class="mb-0">{{ customers.count }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">New This Month</h6>
+                <h3 class="mb-0">{{ new_customers_count|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
