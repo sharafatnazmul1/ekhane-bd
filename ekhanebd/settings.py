@@ -66,6 +66,8 @@ INSTALLED_APPS = [
     'main',
     'dokans',
     'accounts',
+    'products',
+    'orders',
 ]
 
 MIDDLEWARE = [
@@ -77,6 +79,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'main.middleware.SubdomainMiddleware',  # Multi-tenant subdomain routing
+    'main.middleware.StoreAccessMiddleware',  # Store access control
 ]
 
 ROOT_URLCONF = 'ekhanebd.urls'
@@ -156,6 +160,12 @@ LOCALE_PATHS = [
 ]
 
 
+# Authentication settings
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
@@ -164,6 +174,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static/'),  # This is where your development static files are stored
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'assets')  # This is where static files will be collected
+
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

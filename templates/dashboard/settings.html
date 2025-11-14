@@ -1,0 +1,167 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Store Settings - {{ store.store_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Store Settings</h2>
+</div>
+
+{% if messages %}
+<div class="alert-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Left Column - Settings Form -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">General Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Store Name -->
+                    <div class="mb-4">
+                        <label for="{{ form.store_name.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.store_name.label }}
+                        </label>
+                        {{ form.store_name }}
+                        {% if form.store_name.help_text %}
+                        <small class="form-text text-muted d-block mt-1">{{ form.store_name.help_text }}</small>
+                        {% endif %}
+                        {% if form.store_name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.store_name.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Store Status -->
+                    <div class="mb-4">
+                        <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.status.label }}
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.help_text %}
+                        <small class="form-text text-muted d-block mt-1">{{ form.status.help_text }}</small>
+                        {% endif %}
+                        {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.status.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Save Settings
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Store Info -->
+    <div class="col-lg-4">
+        <!-- Store Information -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Store Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Store Owner</small>
+                    <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
+                    <div class="text-muted small">{{ request.user.username }}</div>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Store Subdomain</small>
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="{{ store.subdomain }}.ekhane.bd" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copySubdomain()" title="Copy to clipboard">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-1">This is your store's URL</small>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Created On</small>
+                    <strong>{{ store.created_at|date:"F d, Y" }}</strong>
+                </div>
+                <hr>
+                <div class="mb-0">
+                    <small class="text-muted d-block mb-1">Trial Status</small>
+                    {% if store.is_trial_active %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle"></i> Active
+                    </span>
+                    <div class="text-muted small mt-1">
+                        Trial ends: {{ store.trial_end|date:"M d, Y" }}
+                    </div>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">
+                        <i class="bi bi-exclamation-triangle"></i> Expired
+                    </span>
+                    <div class="text-muted small mt-1">
+                        Trial ended: {{ store.trial_end|date:"M d, Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="http://{{ store.subdomain }}.ekhane.bd/shop/" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> View Storefront
+                    </a>
+                    <a href="{% url 'product_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-box"></i> Manage Products
+                    </a>
+                    <a href="{% url 'order_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-basket"></i> View Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copySubdomain() {
+    const input = document.querySelector('input[value="{{ store.subdomain }}.ekhane.bd"]');
+    input.select();
+    document.execCommand('copy');
+
+    // Show feedback
+    const button = event.target.closest('button');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-check"></i>';
+
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+    }, 2000);
+}
+</script>
+{% endblock %}

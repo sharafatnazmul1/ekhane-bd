@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - {{ order.order_number }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <!-- Main Container -->
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Order Confirmed!</h1>
+                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px;">Thank you for your order</p>
+                        </td>
+                    </tr>
+
+                    <!-- Success Icon -->
+                    <tr>
+                        <td style="padding: 30px; text-align: center;">
+                            <div style="font-size: 60px; margin-bottom: 10px;">✓</div>
+                            <h2 style="color: #333; margin: 0 0 10px 0; font-size: 22px;">Your order has been placed successfully!</h2>
+                            <p style="color: #666; margin: 0; font-size: 14px;">We'll send you shipping updates as soon as your order is on its way.</p>
+                        </td>
+                    </tr>
+
+                    <!-- Order Details -->
+                    <tr>
+                        <td style="padding: 0 30px 20px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px;">
+                                <tr>
+                                    <td>
+                                        <table width="100%" cellpadding="5" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #666; font-size: 14px;">Order Number:</td>
+                                                <td align="right" style="color: #333; font-weight: 600; font-size: 14px;">{{ order.order_number }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666; font-size: 14px;">Order Date:</td>
+                                                <td align="right" style="color: #333; font-weight: 600; font-size: 14px;">{{ order.created_at|date:"F d, Y" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666; font-size: 14px;">Store:</td>
+                                                <td align="right" style="color: #333; font-weight: 600; font-size: 14px;">{{ store.store_name }}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Order Items -->
+                    <tr>
+                        <td style="padding: 0 30px 20px 30px;">
+                            <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">Order Items</h3>
+                            <table width="100%" cellpadding="10" cellspacing="0" style="border-top: 2px solid #e0e0e0;">
+                                {% for item in order.items.all %}
+                                <tr style="border-bottom: 1px solid #e0e0e0;">
+                                    <td style="color: #333; font-size: 14px;">
+                                        <strong>{{ item.product_name }}</strong><br>
+                                        <span style="color: #999; font-size: 12px;">SKU: {{ item.product_sku }}</span>
+                                    </td>
+                                    <td align="center" style="color: #666; font-size: 14px;">× {{ item.quantity }}</td>
+                                    <td align="right" style="color: #333; font-weight: 600; font-size: 14px;">৳{{ item.total }}</td>
+                                </tr>
+                                {% endfor %}
+
+                                <!-- Totals -->
+                                <tr>
+                                    <td colspan="2" align="right" style="color: #666; font-size: 14px; padding-top: 15px;">Subtotal:</td>
+                                    <td align="right" style="color: #333; font-size: 14px; padding-top: 15px;">৳{{ order.subtotal }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="right" style="color: #666; font-size: 14px;">Shipping:</td>
+                                    <td align="right" style="color: #333; font-size: 14px;">
+                                        {% if order.shipping_cost > 0 %}
+                                        ৳{{ order.shipping_cost }}
+                                        {% else %}
+                                        <span style="color: #28a745;">FREE</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f8f9fa;">
+                                    <td colspan="2" align="right" style="color: #333; font-weight: 600; font-size: 16px; padding: 15px 10px;">Total:</td>
+                                    <td align="right" style="color: #667eea; font-weight: 700; font-size: 18px; padding: 15px 10px;">৳{{ order.total }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Shipping & Payment Info -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <!-- Shipping Address -->
+                                    <td width="50%" valign="top" style="padding-right: 10px;">
+                                        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px;">
+                                            <h4 style="color: #333; margin: 0 0 10px 0; font-size: 14px;">Shipping Address</h4>
+                                            <p style="color: #666; margin: 0; font-size: 13px; line-height: 1.6;">
+                                                <strong style="color: #333;">{{ order.shipping_name }}</strong><br>
+                                                {{ order.shipping_address }}<br>
+                                                {% if order.shipping_area %}{{ order.shipping_area }}, {% endif %}
+                                                {{ order.shipping_district }}<br>
+                                                {{ order.shipping_division }}<br>
+                                                <br>
+                                                {{ order.shipping_email }}<br>
+                                                {{ order.shipping_phone }}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <!-- Payment Info -->
+                                    <td width="50%" valign="top" style="padding-left: 10px;">
+                                        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px;">
+                                            <h4 style="color: #333; margin: 0 0 10px 0; font-size: 14px;">Payment Information</h4>
+                                            <p style="color: #666; margin: 0; font-size: 13px; line-height: 1.6;">
+                                                <strong style="color: #333;">Method:</strong><br>
+                                                {% if order.payment_method == 'cod' %}
+                                                <span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">Cash on Delivery</span>
+                                                {% elif order.payment_method == 'bkash' %}
+                                                <span style="background-color: #667eea; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">bKash</span>
+                                                {% endif %}
+                                                <br><br>
+                                                <strong style="color: #333;">Status:</strong><br>
+                                                {% if order.payment_status == 'paid' %}
+                                                <span style="color: #28a745;">✓ Paid</span>
+                                                {% else %}
+                                                <span style="color: #ffc107;">{{ order.payment_status|title }}</span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- What's Next -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background-color: #e7f3ff; border-left: 4px solid #667eea; border-radius: 4px; padding: 15px;">
+                                <h4 style="color: #333; margin: 0 0 10px 0; font-size: 14px;">What happens next?</h4>
+                                <ul style="color: #666; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+                                    <li>Your order will be processed within 1-2 business days</li>
+                                    {% if order.payment_method == 'cod' %}
+                                    <li>Please keep the exact amount ready for payment on delivery</li>
+                                    {% endif %}
+                                    <li>You'll receive updates about your order status</li>
+                                    <li>Track your order using the order number above</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- CTA Button -->
+                    <tr>
+                        <td align="center" style="padding: 0 30px 30px 30px;">
+                            <a href="http://{{ subdomain }}.{{ domain }}/order/{{ order.order_number }}/" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; font-size: 14px;">View Order Details</a>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                            <p style="color: #999; margin: 0 0 10px 0; font-size: 12px;">
+                                Need help? Contact us at <a href="mailto:{{ store.owner.username }}" style="color: #667eea; text-decoration: none;">{{ store.owner.username }}</a>
+                            </p>
+                            <p style="color: #999; margin: 0; font-size: 12px;">
+                                © {{ current_year }} {{ store.store_name }}. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

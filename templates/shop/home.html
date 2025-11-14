@@ -1,0 +1,154 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}{{ store.store_name }} - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container text-white text-center">
+        <h1 class="display-4 fw-bold mb-3">Welcome to {{ store.store_name }}</h1>
+        <p class="lead mb-4">Discover amazing products at great prices</p>
+        <a href="{% url 'shop_products' %}" class="btn btn-light btn-lg">
+            <i class="bi bi-shop"></i> Shop Now
+        </a>
+    </div>
+</section>
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="py-5">
+    <div class="container">
+        <h2 class="mb-4"><i class="bi bi-star-fill text-warning"></i> Featured Products</h2>
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-md-3 col-sm-6">
+                <div class="product-card">
+                    <div class="position-relative">
+                        {% if product.get_primary_image %}
+                        <img src="{{ product.get_primary_image.image.url }}" alt="{{ product.name }}" class="product-image">
+                        {% else %}
+                        <div class="product-image d-flex align-items-center justify-content-center bg-light">
+                            <i class="bi bi-image text-muted" style="font-size: 48px;"></i>
+                        </div>
+                        {% endif %}
+
+                        {% if product.discount_percentage > 0 %}
+                        <span class="badge-sale">-{{ product.discount_percentage }}%</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-info">
+                        <a href="{% url 'shop_product_detail' product.slug %}" class="product-name">
+                            {{ product.name }}
+                        </a>
+                        <div class="product-price mt-2">
+                            ৳{{ product.final_price }}
+                            {% if product.sale_price %}
+                            <span class="product-price-old">৳{{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                        <button onclick="addToCart({{ product.id }})" class="btn btn-primary w-100 mt-3">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- All Products -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-grid-3x3-gap"></i> All Products</h2>
+            <a href="{% url 'shop_products' %}" class="btn btn-outline-primary">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row g-4">
+            {% for product in all_products %}
+            <div class="col-md-3 col-sm-6">
+                <div class="product-card">
+                    <div class="position-relative">
+                        {% if product.get_primary_image %}
+                        <img src="{{ product.get_primary_image.image.url }}" alt="{{ product.name }}" class="product-image">
+                        {% else %}
+                        <div class="product-image d-flex align-items-center justify-content-center bg-light">
+                            <i class="bi bi-image text-muted" style="font-size: 48px;"></i>
+                        </div>
+                        {% endif %}
+
+                        {% if product.discount_percentage > 0 %}
+                        <span class="badge-sale">-{{ product.discount_percentage }}%</span>
+                        {% endif %}
+
+                        {% if not product.is_in_stock %}
+                        <span class="badge-sale bg-secondary">Out of Stock</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-info">
+                        <a href="{% url 'shop_product_detail' product.slug %}" class="product-name">
+                            {{ product.name }}
+                        </a>
+                        <div class="product-price mt-2">
+                            ৳{{ product.final_price }}
+                            {% if product.sale_price %}
+                            <span class="product-price-old">৳{{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                        {% if product.is_in_stock %}
+                        <button onclick="addToCart({{ product.id }})" class="btn btn-primary w-100 mt-3">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                        </button>
+                        {% else %}
+                        <button class="btn btn-secondary w-100 mt-3" disabled>
+                            Out of Stock
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-box-seam" style="font-size: 64px; color: #ccc;"></i>
+                <p class="mt-3 text-muted">No products available yet. Check back soon!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Shop With Us?</h2>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="p-4">
+                    <i class="bi bi-truck" style="font-size: 48px; color: #667eea;"></i>
+                    <h4 class="mt-3">Fast Delivery</h4>
+                    <p class="text-muted">Quick and reliable shipping to your doorstep</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4">
+                    <i class="bi bi-shield-check" style="font-size: 48px; color: #667eea;"></i>
+                    <h4 class="mt-3">Secure Payment</h4>
+                    <p class="text-muted">Cash on Delivery and bKash available</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4">
+                    <i class="bi bi-headset" style="font-size: 48px; color: #667eea;"></i>
+                    <h4 class="mt-3">Customer Support</h4>
+                    <p class="text-muted">We're here to help you anytime</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

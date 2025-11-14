@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - Ekhane.bd</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .content p {
+            color: #555555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .otp-box {
+            background-color: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .otp-code {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .expiry {
+            color: #888888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #888888;
+            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .warning p {
+            margin: 0;
+            color: #856404;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🔐 Verify Your Email</h1>
+        </div>
+        <div class="content">
+            <p>Welcome to <strong>Ekhane.bd</strong>!</p>
+            <p>To complete your registration and activate your store, please use the verification code below:</p>
+
+            <div class="otp-box">
+                <div class="otp-code">{{ otp }}</div>
+                <div class="expiry">This code expires in 5 minutes</div>
+            </div>
+
+            <p>Enter this code on the verification page to continue setting up your online store.</p>
+
+            <div class="warning">
+                <p><strong>Security Notice:</strong> If you didn't request this code, please ignore this email. Someone may have entered your email address by mistake.</p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>This is an automated email from <a href="https://ekhane.bd">Ekhane.bd</a></p>
+            <p>&copy; 2024 Ekhane.bd - Multi-Shop Ecommerce Platform</p>
+        </div>
+    </div>
+</body>
+</html>

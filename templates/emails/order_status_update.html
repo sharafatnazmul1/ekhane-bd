@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status Update - {{ order.order_number }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <!-- Main Container -->
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Order Status Update</h1>
+                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px;">{{ store.store_name }}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Status Icon -->
+                    <tr>
+                        <td style="padding: 30px; text-align: center;">
+                            {% if new_status == 'confirmed' %}
+                            <div style="font-size: 60px; margin-bottom: 10px;">✓</div>
+                            <h2 style="color: #333; margin: 0 0 10px 0; font-size: 22px;">Your order has been confirmed!</h2>
+                            {% elif new_status == 'processing' %}
+                            <div style="font-size: 60px; margin-bottom: 10px;">📦</div>
+                            <h2 style="color: #333; margin: 0 0 10px 0; font-size: 22px;">Your order is being processed</h2>
+                            {% elif new_status == 'shipped' %}
+                            <div style="font-size: 60px; margin-bottom: 10px;">🚚</div>
+                            <h2 style="color: #333; margin: 0 0 10px 0; font-size: 22px;">Your order has been shipped!</h2>
+                            {% elif new_status == 'delivered' %}
+                            <div style="font-size: 60px; margin-bottom: 10px;">✅</div>
+                            <h2 style="color: #333; margin: 0 0 10px 0; font-size: 22px;">Your order has been delivered!</h2>
+                            {% elif new_status == 'cancelled' %}
+                            <div style="font-size: 60px; margin-bottom: 10px;">❌</div>
+                            <h2 style="color: #333; margin: 0 0 10px 0; font-size: 22px;">Your order has been cancelled</h2>
+                            {% else %}
+                            <div style="font-size: 60px; margin-bottom: 10px;">📋</div>
+                            <h2 style="color: #333; margin: 0 0 10px 0; font-size: 22px;">Order Status Updated</h2>
+                            {% endif %}
+                            <p style="color: #666; margin: 0; font-size: 14px;">Order #{{ order.order_number }}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Status Badge -->
+                    <tr>
+                        <td align="center" style="padding: 0 30px 20px 30px;">
+                            {% if new_status == 'pending' %}
+                            <span style="display: inline-block; background-color: #ffc107; color: #000; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;">Pending</span>
+                            {% elif new_status == 'confirmed' %}
+                            <span style="display: inline-block; background-color: #17a2b8; color: #fff; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;">Confirmed</span>
+                            {% elif new_status == 'processing' %}
+                            <span style="display: inline-block; background-color: #667eea; color: #fff; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;">Processing</span>
+                            {% elif new_status == 'shipped' %}
+                            <span style="display: inline-block; background-color: #6c757d; color: #fff; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;">Shipped</span>
+                            {% elif new_status == 'delivered' %}
+                            <span style="display: inline-block; background-color: #28a745; color: #fff; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;">Delivered</span>
+                            {% elif new_status == 'cancelled' %}
+                            <span style="display: inline-block; background-color: #dc3545; color: #fff; padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;">Cancelled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Order Summary -->
+                    <tr>
+                        <td style="padding: 0 30px 20px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px;">
+                                <tr>
+                                    <td>
+                                        <table width="100%" cellpadding="5" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #666; font-size: 14px;">Order Date:</td>
+                                                <td align="right" style="color: #333; font-weight: 600; font-size: 14px;">{{ order.created_at|date:"F d, Y" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666; font-size: 14px;">Total Amount:</td>
+                                                <td align="right" style="color: #333; font-weight: 600; font-size: 14px;">৳{{ order.total }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666; font-size: 14px;">Items:</td>
+                                                <td align="right" style="color: #333; font-weight: 600; font-size: 14px;">{{ order.items.count }}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Status-Specific Message -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background-color: #e7f3ff; border-left: 4px solid #667eea; border-radius: 4px; padding: 15px;">
+                                {% if new_status == 'confirmed' %}
+                                <p style="color: #666; margin: 0; font-size: 13px; line-height: 1.6;">
+                                    Great news! Your order has been confirmed and will be processed soon.
+                                    We'll notify you once it's ready to ship.
+                                </p>
+                                {% elif new_status == 'processing' %}
+                                <p style="color: #666; margin: 0; font-size: 13px; line-height: 1.6;">
+                                    Your order is currently being prepared for shipment.
+                                    We'll update you once it's on its way!
+                                </p>
+                                {% elif new_status == 'shipped' %}
+                                <p style="color: #666; margin: 0; font-size: 13px; line-height: 1.6;">
+                                    Your order is on its way! It should arrive within the estimated delivery time.
+                                    {% if order.payment_method == 'cod' %}
+                                    Please keep the exact amount ready for payment on delivery.
+                                    {% endif %}
+                                </p>
+                                {% elif new_status == 'delivered' %}
+                                <p style="color: #666; margin: 0; font-size: 13px; line-height: 1.6;">
+                                    Your order has been delivered successfully! We hope you enjoy your purchase.
+                                    Thank you for shopping with us!
+                                </p>
+                                {% elif new_status == 'cancelled' %}
+                                <p style="color: #666; margin: 0; font-size: 13px; line-height: 1.6;">
+                                    Your order has been cancelled. If you have any questions, please contact us.
+                                </p>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- CTA Button -->
+                    <tr>
+                        <td align="center" style="padding: 0 30px 30px 30px;">
+                            <a href="http://{{ subdomain }}.{{ domain }}/order/{{ order.order_number }}/" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; font-size: 14px;">View Order Details</a>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                            <p style="color: #999; margin: 0 0 10px 0; font-size: 12px;">
+                                Questions? Contact us at <a href="mailto:{{ store.owner.username }}" style="color: #667eea; text-decoration: none;">{{ store.owner.username }}</a>
+                            </p>
+                            <p style="color: #999; margin: 0; font-size: 12px;">
+                                © {{ current_year }} {{ store.store_name }}. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
