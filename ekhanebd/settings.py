@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'dokans',
     'accounts',
     'products',
+    'orders',
 ]
 
 MIDDLEWARE = [
