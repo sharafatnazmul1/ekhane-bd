@@ -1,0 +1,82 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="page-title">Categories</h1>
+        <p class="page-subtitle">Organize your products</p>
+    </div>
+    <a href="{% url 'category_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Category
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        {% if categories %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Parent</th>
+                        <th>Products</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td>
+                            <strong>{{ category.name }}</strong>
+                            {% if category.description %}
+                            <br><small class="text-muted">{{ category.description|truncatewords:10 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if category.parent %}
+                            <span class="badge bg-light text-dark">{{ category.parent.name }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ category.products.count }}</td>
+                        <td>{{ category.order }}</td>
+                        <td>
+                            {% if category.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'category_edit' category.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'category_delete' category.id %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-tags" style="font-size: 64px; color: #ccc;"></i>
+            <p class="mt-3 text-muted">No categories yet. Click "Add Category" to get started!</p>
+            <a href="{% url 'category_add' %}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-circle"></i> Add Your First Category
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

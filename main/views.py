@@ -305,14 +305,16 @@ def dashboard(request):
         messages.error(request, "No store found for your account")
         return redirect('/')
 
-    # Get statistics (will be populated when models are created)
-    # For now, using defaults
-    total_orders = 0
-    total_revenue = 0
-    total_products = 0
-    total_customers = 0
-    recent_orders = []
-    low_stock_products = []
+    # Import Product model
+    from products.models import Product
+
+    # Get statistics
+    total_orders = 0  # Will be populated when Order model is created
+    total_revenue = 0  # Will be populated when Order model is created
+    total_products = Product.objects.filter(store=store).count()
+    total_customers = 0  # Will be populated when Customer model is created
+    recent_orders = []  # Will be populated when Order model is created
+    low_stock_products = [p for p in Product.objects.filter(store=store, track_inventory=True)[:5] if p.is_low_stock]
 
     context = {
         'store': store,

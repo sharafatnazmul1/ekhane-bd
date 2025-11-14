@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from main import views as public_views
@@ -30,6 +30,7 @@ urlpatterns = [
     path('login/', public_views.login_view, name='login'),
     path('logout/', public_views.logout_view, name='logout'),
     path('dashboard/', public_views.dashboard, name='dashboard'),
+    path('dashboard/products/', include('products.urls')),
 ]
 
 # Serve media files in development
