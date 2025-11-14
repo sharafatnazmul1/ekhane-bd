@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from main import views as public_views
 
 urlpatterns = [
@@ -23,4 +25,13 @@ urlpatterns = [
     path('', public_views.home, name='home'),
     path('registration/', public_views.signup, name="signup"),
     path("validate/", public_views.validate_field, name="validate-field"),
+    path('verify-otp/', public_views.verify_otp_view, name='verify-otp'),
+    path('resend-otp/', public_views.resend_otp_view, name='resend-otp'),
+    path('login/', public_views.login_view, name='login'),
+    path('logout/', public_views.logout_view, name='logout'),
+    path('dashboard/', public_views.dashboard, name='dashboard'),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

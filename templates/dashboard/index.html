@@ -1,0 +1,224 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Dashboard Overview</h1>
+    <p class="page-subtitle">Welcome back, {{ user.first_name }}! Here's what's happening with your store today.</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <div class="value">{{ total_orders|default:0 }}</div>
+            <div class="label">Total Orders</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="value">৳{{ total_revenue|default:0|floatformat:0 }}</div>
+            <div class="label">Total Revenue</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="value">{{ total_products|default:0 }}</div>
+            <div class="label">Total Products</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="value">{{ total_customers|default:0 }}</div>
+            <div class="label">Total Customers</div>
+        </div>
+    </div>
+</div>
+
+<!-- Trial Warning -->
+{% if store.is_trial_active %}
+<div class="alert alert-warning" role="alert">
+    <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Trial Period Active</h5>
+    <p class="mb-0">Your trial expires on <strong>{{ store.trial_end|date:"F d, Y" }}</strong>. Upgrade to continue using all features.</p>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="/dashboard/products/add/" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Product
+                    </a>
+                    <a href="/dashboard/orders/" class="btn btn-outline-primary">
+                        <i class="bi bi-cart-check"></i> View Orders
+                    </a>
+                    <a href="/dashboard/templates/" class="btn btn-outline-primary">
+                        <i class="bi bi-palette"></i> Change Template
+                    </a>
+                    <a href="/dashboard/settings/" class="btn btn-outline-primary">
+                        <i class="bi bi-gear"></i> Store Settings
+                    </a>
+                    <a href="http://{{ store.subdomain }}.ekhane.bd" target="_blank" class="btn btn-outline-secondary">
+                        <i class="bi bi-box-arrow-up-right"></i> Preview Store
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders & Low Stock -->
+<div class="row g-4">
+    <!-- Recent Orders -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Orders</h5>
+                <a href="/dashboard/orders/" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="/dashboard/orders/{{ order.id }}/">#{{ order.order_number }}</a></td>
+                                <td>{{ order.customer.name }}</td>
+                                <td>৳{{ order.total|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                        {{ order.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-cart-x" style="font-size: 48px;"></i>
+                    <p class="mt-3">No orders yet</p>
+                    <p class="small">Orders will appear here when customers start purchasing from your store.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Low Stock Alert</h5>
+            </div>
+            <div class="card-body">
+                {% if low_stock_products %}
+                <div class="list-group list-group-flush">
+                    {% for product in low_stock_products %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ product.name }}</h6>
+                                <small class="text-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> {{ product.stock_quantity }} left
+                                </small>
+                            </div>
+                            <a href="/dashboard/products/{{ product.id }}/edit/" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check-circle" style="font-size: 48px; color: #43e97b;"></i>
+                    <p class="mt-3 mb-0">All products in stock!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Getting Started -->
+        <div class="card mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Getting Started</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0">
+                        <input type="checkbox" {% if total_products > 0 %}checked{% endif %} class="form-check-input me-2" disabled>
+                        <label>Add your first product</label>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <input type="checkbox" class="form-check-input me-2" disabled>
+                        <label>Customize your template</label>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <input type="checkbox" class="form-check-input me-2" disabled>
+                        <label>Set up payment methods</label>
+                    </div>
+                    <div class="list-group-item px-0">
+                        <input type="checkbox" {% if total_orders > 0 %}checked{% endif %} class="form-check-input me-2" disabled>
+                        <label>Receive your first order</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+        border-bottom: 1px solid #e0e0e0;
+        padding: 15px 20px;
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 12px;
+    }
+
+    .badge {
+        padding: 5px 10px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
