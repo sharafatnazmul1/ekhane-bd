@@ -329,3 +329,389 @@ def dashboard(request):
     return render(request, 'dashboard/index.html', context)
 
 
+# ============================================================================
+# STOREFRONT VIEWS (Customer-Facing Shop)
+# ============================================================================
+
+def shop_home(request):
+    """Storefront homepage - shows featured/all products"""
+    store = request.store  # Set by SubdomainMiddleware
+
+    if not store:
+        return redirect('/')
+
+    from products.models import Product
+
+    # Get products
+    featured_products = Product.objects.filter(store=store, is_active=True, is_featured=True)[:8]
+    all_products = Product.objects.filter(store=store, is_active=True)[:12]
+
+    # Get cart count
+    cart_count = get_cart_count(request, store)
+
+    context = {
+        'store': store,
+        'featured_products': featured_products,
+        'all_products': all_products,
+        'cart_count': cart_count,
+    }
+    return render(request, 'shop/home.html', context)
+
+
+def shop_products(request):
+    """Product listing page"""
+    store = request.store
+
+    if not store:
+        return redirect('/')
+
+    from products.models import Product, Category
+
+    # Get filters
+    category_slug = request.GET.get('category')
+    search = request.GET.get('search', '')
+
+    # Base queryset
+    products = Product.objects.filter(store=store, is_active=True)
+
+    # Apply filters
+    if category_slug:
+        products = products.filter(category__slug=category_slug)
+
+    if search:
+        from django.db.models import Q
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(description__icontains=search)
+        )
+
+    # Get categories
+    categories = Category.objects.filter(store=store, is_active=True)
+    cart_count = get_cart_count(request, store)
+
+    context = {
+        'store': store,
+        'products': products,
+        'categories': categories,
+        'search': search,
+        'cart_count': cart_count,
+    }
+    return render(request, 'shop/products.html', context)
+
+
+def shop_product_detail(request, slug):
+    """Product detail page"""
+    store = request.store
+
+    if not store:
+        return redirect('/')
+
+    from products.models import Product
+    from django.shortcuts import get_object_or_404
+
+    product = get_object_or_404(Product, store=store, slug=slug, is_active=True)
+    cart_count = get_cart_count(request, store)
+
+    context = {
+        'store': store,
+        'product': product,
+        'cart_count': cart_count,
+    }
+    return render(request, 'shop/product_detail.html', context)
+
+
+# ============================================================================
+# CART FUNCTIONS
+# ============================================================================
+
+def get_or_create_cart(request, store):
+    """Get or create cart for current session/customer"""
+    from orders.models import Cart
+
+    # Get session key
+    if not request.session.session_key:
+        request.session.create()
+    session_key = request.session.session_key
+
+    # Try to get existing cart
+    cart, created = Cart.objects.get_or_create(
+        store=store,
+        session_key=session_key,
+        defaults={'store': store}
+    )
+
+    return cart
+
+
+def get_cart_count(request, store):
+    """Get total items in cart"""
+    from orders.models import Cart
+
+    if not request.session.session_key:
+        return 0
+
+    try:
+        cart = Cart.objects.get(store=store, session_key=request.session.session_key)
+        return cart.total_items
+    except Cart.DoesNotExist:
+        return 0
+
+
+# ============================================================================
+# CART VIEWS
+# ============================================================================
+
+def cart_view(request):
+    """View cart"""
+    store = request.store
+
+    if not store:
+        return redirect('/')
+
+    cart = get_or_create_cart(request, store)
+
+    context = {
+        'store': store,
+        'cart': cart,
+        'cart_count': cart.total_items,
+    }
+    return render(request, 'shop/cart.html', context)
+
+
+def cart_add(request, product_id):
+    """Add product to cart (AJAX)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+    store = request.store
+    if not store:
+        return JsonResponse({'success': False, 'message': 'Store not found'})
+
+    from products.models import Product
+    from django.shortcuts import get_object_or_404
+
+    try:
+        product = get_object_or_404(Product, id=product_id, store=store, is_active=True)
+
+        # Check stock
+        if product.track_inventory and product.stock_quantity < 1:
+            return JsonResponse({'success': False, 'message': 'Product out of stock'})
+
+        cart = get_or_create_cart(request, store)
+        cart.add_item(product, quantity=1)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{product.name} added to cart',
+            'cart_count': cart.total_items
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+def cart_update(request, item_id):
+    """Update cart item quantity (AJAX)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+    store = request.store
+    if not store:
+        return JsonResponse({'success': False, 'message': 'Store not found'})
+
+    from orders.models import CartItem
+    import json
+
+    try:
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity', 1))
+
+        cart = get_or_create_cart(request, store)
+        cart_item = CartItem.objects.get(id=item_id, cart=cart)
+
+        # Update quantity
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+            message = 'Cart updated'
+        else:
+            cart_item.delete()
+            message = 'Item removed from cart'
+
+        cart.refresh_from_db()
+
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'cart_count': cart.total_items,
+            'subtotal': float(cart.subtotal)
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+def cart_remove(request, item_id):
+    """Remove item from cart"""
+    store = request.store
+    if not store:
+        return redirect('/')
+
+    from orders.models import CartItem
+
+    cart = get_or_create_cart(request, store)
+
+    try:
+        cart_item = CartItem.objects.get(id=item_id, cart=cart)
+        cart_item.delete()
+        messages.success(request, 'Item removed from cart')
+    except CartItem.DoesNotExist:
+        messages.error(request, 'Item not found')
+
+    return redirect('cart_view')
+
+
+# ============================================================================
+# CHECKOUT & ORDER VIEWS
+# ============================================================================
+
+def checkout(request):
+    """Checkout page"""
+    store = request.store
+    if not store:
+        return redirect('/')
+
+    cart = get_or_create_cart(request, store)
+
+    if cart.total_items == 0:
+        messages.error(request, 'Your cart is empty')
+        return redirect('cart_view')
+
+    if request.method == 'POST':
+        return process_checkout(request, store, cart)
+
+    context = {
+        'store': store,
+        'cart': cart,
+        'cart_count': cart.total_items,
+    }
+    return render(request, 'shop/checkout.html', context)
+
+
+def process_checkout(request, store, cart):
+    """Process checkout and create order"""
+    from orders.models import Customer, Order, OrderItem, Payment
+
+    # Get form data
+    name = request.POST.get('name', '').strip()
+    email = request.POST.get('email', '').strip()
+    phone = request.POST.get('phone', '').strip()
+    address = request.POST.get('address', '').strip()
+    division = request.POST.get('division', '').strip()
+    district = request.POST.get('district', '').strip()
+    area = request.POST.get('area', '').strip()
+    notes = request.POST.get('notes', '').strip()
+    payment_method = request.POST.get('payment_method', 'cod')
+
+    # Validate
+    if not all([name, email, phone, address, division, district]):
+        messages.error(request, 'Please fill in all required fields')
+        return redirect('checkout')
+
+    # Get or create customer
+    customer, created = Customer.objects.get_or_create(
+        store=store,
+        email=email,
+        defaults={'name': name, 'phone': phone}
+    )
+
+    if not created:
+        customer.name = name
+        customer.phone = phone
+        customer.save()
+
+    # Create order
+    subtotal = cart.subtotal
+    shipping_cost = 0  # Can be customized based on store settings
+    total = subtotal + shipping_cost
+
+    order = Order.objects.create(
+        store=store,
+        customer=customer,
+        status='pending',
+        payment_method=payment_method,
+        payment_status='pending',
+        subtotal=subtotal,
+        shipping_cost=shipping_cost,
+        total=total,
+        shipping_name=name,
+        shipping_email=email,
+        shipping_phone=phone,
+        shipping_address=address,
+        shipping_division=division,
+        shipping_district=district,
+        shipping_area=area,
+        notes=notes
+    )
+
+    # Create order items from cart
+    for cart_item in cart.items.all():
+        OrderItem.objects.create(
+            order=order,
+            product=cart_item.product,
+            product_name=cart_item.product.name,
+            product_sku=cart_item.product.sku,
+            quantity=cart_item.quantity,
+            price=cart_item.price,
+            total=cart_item.total
+        )
+
+        # Reduce stock if tracking inventory
+        if cart_item.product.track_inventory:
+            cart_item.product.stock_quantity -= cart_item.quantity
+            cart_item.product.save()
+
+    # Create payment record
+    payment = Payment.objects.create(
+        order=order,
+        payment_method=payment_method,
+        amount=total,
+        status='pending'
+    )
+
+    # Clear cart
+    cart.clear()
+
+    # Handle payment method
+    if payment_method == 'cod':
+        # COD - order is confirmed, payment pending
+        order.status = 'confirmed'
+        order.save()
+        return redirect('order_confirmation', order_number=order.order_number)
+    elif payment_method == 'bkash':
+        # Redirect to bKash payment (will implement later)
+        messages.info(request, 'bKash payment coming soon. Using COD for now.')
+        order.status = 'confirmed'
+        order.save()
+        return redirect('order_confirmation', order_number=order.order_number)
+
+    return redirect('order_confirmation', order_number=order.order_number)
+
+
+def order_confirmation(request, order_number):
+    """Order confirmation page"""
+    store = request.store
+    if not store:
+        return redirect('/')
+
+    from orders.models import Order
+    from django.shortcuts import get_object_or_404
+
+    order = get_object_or_404(Order, order_number=order_number, store=store)
+
+    context = {
+        'store': store,
+        'order': order,
+        'cart_count': 0,  # Cart is empty after checkout
+    }
+    return render(request, 'shop/order_confirmation.html', context)
+
+

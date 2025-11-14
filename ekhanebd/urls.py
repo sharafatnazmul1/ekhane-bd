@@ -22,6 +22,7 @@ from main import views as public_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Main site URLs
     path('', public_views.home, name='home'),
     path('registration/', public_views.signup, name="signup"),
     path("validate/", public_views.validate_field, name="validate-field"),
@@ -29,8 +30,25 @@ urlpatterns = [
     path('resend-otp/', public_views.resend_otp_view, name='resend-otp'),
     path('login/', public_views.login_view, name='login'),
     path('logout/', public_views.logout_view, name='logout'),
+
+    # Dashboard URLs
     path('dashboard/', public_views.dashboard, name='dashboard'),
     path('dashboard/products/', include('products.urls')),
+
+    # Storefront URLs (work on subdomains via middleware)
+    path('shop/', public_views.shop_home, name='shop_home'),
+    path('shop/products/', public_views.shop_products, name='shop_products'),
+    path('shop/product/<slug:slug>/', public_views.shop_product_detail, name='shop_product_detail'),
+
+    # Cart URLs
+    path('cart/', public_views.cart_view, name='cart_view'),
+    path('cart/add/<int:product_id>/', public_views.cart_add, name='cart_add'),
+    path('cart/update/<int:item_id>/', public_views.cart_update, name='cart_update'),
+    path('cart/remove/<int:item_id>/', public_views.cart_remove, name='cart_remove'),
+
+    # Checkout URLs
+    path('checkout/', public_views.checkout, name='checkout'),
+    path('order/<str:order_number>/', public_views.order_confirmation, name='order_confirmation'),
 ]
 
 # Serve media files in development
