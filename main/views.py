@@ -7,6 +7,8 @@ from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.db import transaction
+from django.db.models import F
 from dokans.models import Store
 from .utils.email_service import is_real_email, send_otp_email
 from .utils.domain_validator import is_valid_subdomain
@@ -692,9 +694,11 @@ def checkout(request):
     return render(request, 'shop/checkout.html', context)
 
 
+@transaction.atomic
 def process_checkout(request, store, cart):
-    """Process checkout and create order"""
+    """Process checkout and create order (with transaction and stock locking)"""
     from orders.models import Customer, Order, OrderItem, Payment
+    from products.models import Product
 
     # Get form data
     name = request.POST.get('name', '').strip()
@@ -711,6 +715,16 @@ def process_checkout(request, store, cart):
     if not all([name, email, phone, address, division, district]):
         messages.error(request, 'Please fill in all required fields')
         return redirect('checkout')
+
+    # Check stock availability before creating order (with row locking)
+    cart_items = list(cart.items.select_related('product').all())
+    for cart_item in cart_items:
+        # Lock the product row to prevent concurrent updates
+        product = Product.objects.select_for_update().get(id=cart_item.product.id)
+
+        if product.track_inventory and product.stock_quantity < cart_item.quantity:
+            messages.error(request, f'Sorry, {product.name} is out of stock or insufficient quantity available.')
+            return redirect('cart_view')
 
     # Get or create customer
     customer, created = Customer.objects.get_or_create(
@@ -748,8 +762,8 @@ def process_checkout(request, store, cart):
         notes=notes
     )
 
-    # Create order items from cart
-    for cart_item in cart.items.all():
+    # Create order items and reduce stock atomically
+    for cart_item in cart_items:
         OrderItem.objects.create(
             order=order,
             product=cart_item.product,
@@ -760,10 +774,11 @@ def process_checkout(request, store, cart):
             total=cart_item.total
         )
 
-        # Reduce stock if tracking inventory
+        # Reduce stock using F() expression to prevent race conditions
         if cart_item.product.track_inventory:
-            cart_item.product.stock_quantity -= cart_item.quantity
-            cart_item.product.save()
+            Product.objects.filter(id=cart_item.product.id).update(
+                stock_quantity=F('stock_quantity') - cart_item.quantity
+            )
 
     # Create payment record
     payment = Payment.objects.create(
@@ -782,8 +797,8 @@ def process_checkout(request, store, cart):
         order.status = 'confirmed'
         order.save()
 
-        # Send order confirmation email
-        send_order_confirmation_email(order, store)
+        # Send order confirmation email (outside transaction to avoid delays)
+        transaction.on_commit(lambda: send_order_confirmation_email(order, store))
 
         return redirect('order_confirmation', order_number=order.order_number)
     elif payment_method == 'bkash':
@@ -792,8 +807,8 @@ def process_checkout(request, store, cart):
         order.status = 'confirmed'
         order.save()
 
-        # Send order confirmation email
-        send_order_confirmation_email(order, store)
+        # Send order confirmation email (outside transaction to avoid delays)
+        transaction.on_commit(lambda: send_order_confirmation_email(order, store))
 
         return redirect('order_confirmation', order_number=order.order_number)
 

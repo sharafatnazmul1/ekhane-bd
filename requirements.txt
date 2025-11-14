@@ -1,0 +1,32 @@
+# Core Django
+Django==5.2.7
+python-dotenv==1.0.0
+
+# Database
+psycopg2-binary==2.9.9  # For PostgreSQL (optional)
+
+# Image handling
+Pillow==10.2.0
+
+# Redis for caching and sessions
+django-redis==5.4.0
+redis==5.0.1
+
+# Email validation
+dnspython==2.5.0
+
+# Forms and UI
+django-crispy-forms==2.1
+
+# Security
+django-cors-headers==4.3.1
+
+# Development
+django-debug-toolbar==4.2.0  # For development only
+
+# Production server
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Monitoring and logging
+sentry-sdk==1.39.2  # Optional - for error tracking

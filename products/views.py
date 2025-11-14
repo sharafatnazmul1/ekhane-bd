@@ -2,13 +2,18 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from dokans.models import Store
 from .models import Product, Category, ProductImage
 from .forms import ProductForm, CategoryForm, ProductImageForm
 
 
 @login_required
 def product_list(request):
-    store = request.user.store
+    try:
+        store = request.user.store
+    except Store.DoesNotExist:
+        messages.error(request, "No store found for your account. Please contact support.")
+        return redirect('home')
 
     # Get search and filter parameters
     search = request.GET.get('search', '')
